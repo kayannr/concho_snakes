@@ -1,0 +1,662 @@
+---
+title: "Concho Water Snakes Classification"
+author: "Kay Royo"
+date: "03/5/2022"
+output: rmdformats::downcute
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+##Clear Compute Memory
+rm(list=ls())
+```
+
+
+# **Introduction**
+
+The main purpose of this project is to develop classification rules for the genders of Concho Water Snakes and to allocate objects to these two classes or groups using the data displayed in Table 1 attached in the Appendix section at the end of this report. The strategy includes partitioning the set of all sample outcomes to two regions that each correspond to a population. Both graphical and numerical techniques are utilized in order to extensively explore the data and the association between the variables included in the data. The primary question of interest for this analysis project is stated as follows. 
+
+
+- Can the _tail length_ and _snout to vent length_ be used to classify _Concho Water Snakes_ genders? 
+
+
+The following tasks are performed in order to analyze the data for this project and provide answer to the question of interest stated above. 
+
+(I) Obtain overall summary statistics to describe the data.  
+
+(II) Use graphical methods such as pairwise scatter plot of data color coded by populations, side by side boxplots, main effects plot, and density plots to visualize the data and show how the quantitative variables are distributed across the populations   
+
+(III) Specify the minimum ECM rule for the gender of _Concho Water Snakes_ using the assumptions that multivariate normal distributions with common variance covariance matrix, equal prior probabilities, and equal costs of misclassification exist. In addition, add the separating line to the scatter plot of the data.
+
+(IV)  For the classification rule obtained, determine the *confusion matrix* of the data and compute the *Apparent Error Rate (APER)*.
+
+(V)  For the classification rule obtained, determine the confusion matrix using the _holdout_ procedure.
+
+The _Materials and Methods_ section below provides a description of the data and the methods used for this analysis. The _Results_ section that follows provides a detailed interpretation of the results obtained from this analysis. The R codes used for this analysis are attached in the Appendix section at the end of this report.  
+
+
+
+***
+
+# **Material and Methods**
+
+
+## Data
+
+The data used for this project is displayed in Table 1 shown in the Appendix section at the end of this report, which includes measurements for _Concho Water Snakes_. This dataset contains one categorical variable, **X1**, which represents genders male and female, and two quantitative variables: **X2** and **X3**. The variable X2 represents _tail length_ in millimeters and X3 represents _snout to vent length_ in millimeters. The dataset includes a total of 66 observations for both genders. Out of the 66 observations, there are $n_1=37$ observations for both _tail length_ and _snout to vent length_ for female Concho Water Snakes and $n_2=29$ observations for male Concho Water Snakes. The observations in this dataset can be denoted as  $X_{\ell j}$ where $\ell=1,\cdots,g$ and $j=1,\cdots,n_{\ell}$ such that  
+
+$$Female:  X_{11}, X_{12}, \cdots, X_{1n_1}$$
+$$Male:  X_{21}, X_{22}, \cdots, X_{2n_2} $$
+$$
+\begin{aligned}
+  p&\text{: total number of features in a single observation = 2}\\
+  g&\text{: total number of populations = 2}\\
+  n_\ell&\text{: number of observation in the $\ell$th population}
+\end{aligned}
+$$
+
+
+
+
+***
+
+## Methods
+
+### I. Summary Statistics
+
+The summary statistics chart of the entire dataset, shown as Data Frame Summary in the Results and Appendix section, is generated using the  *dfSummary()* function in the *summarytools* package. This function produces a summary table with statistics, frequencies, and graphs for all variables in the data frame. The computed summary statistics included in this method are mean, standard deviation, minimum, median, maximum, and interquartile range (IQR), and coefficient of variation (CV). The formulas to compute some of these summary measures are shown below. The upper quartile (Q3)  and lower quartile (Q1) are obtained using the *summary()* function.
+
+
+1. The formula for mean is: $\overline{X}_{p} = \frac{1}{n_p}\sum_{j=1}^{n_p} X_{pj}$, where $p=1,2$ for two features _tail length_ and _snout to vent length_, $j=1,\cdots, n_p$ and $n_p = 66$
+
+2. Standard deviation: $s_p^2=\sqrt(\frac{\sum_{j=1}^{n_p}(X_{pj}-\overline{X}_p)^2}{n_p -1})$,  where $p=1,2$, $j=1,\cdots, n_p$ and $n_p = 66$
+
+3. $IQR = 75th \ percentile \ - \ 25th \ percentile = Q3 - Q1$
+  
+4. $CV = \frac{standard \ deviation}{mean}$
+
+5. $Q_3 = \frac{3}{4}(n_p+1)^{th} \ term$ and $Q_1=\frac{1}{4}(n_p+1)^{th} \ term$, where $p=1,2$ and and $n_p = 66$
+
+
+The summary statistics chart of the entire data grouped by school is generated using the  *st()* function in the *vtable* package (Table 3). This function produces a summary table with statistical measures. The computed summary statistics included in this method are total number for observations for each population (N), mean, standard deviation, minimum, maximum,  upper quartile (75th percentile),  and lower quartile (25th percentile). The formulas to compute some of these summary measures are shown above.The variance-covariance matrix for three schools or populations are generated using the *cov()* function. 
+
+
+### II. Data Visualizations
+
+The pairwise correlation plot is created using the *ggpairs()* function. This visualization includes density plots to show the approximate distribution of the two quantitative variables, scatter plot and correlation values to show the association between Tail Length (X2) and Snout to Vent Length (X3) in each population. The side-by-side boxplots of X2 and X3 are generated for each gender using the *ggplot()* function in the *ggplot2* package in order to display the approximate distributions of these two variables within each population. 
+
+### III.  Minimum ECM Rule
+
+The assumptions stated below are used to obtain the estimated Minimum Expected Cost of Misclassification (ECM) Rule. 
+
+1. Multivariate normal distributions
+
+2. Common variance covariance matrix: $\Sigma_1= \Sigma_2=\Sigma$
+
+3. Equal prior probabilities: $\frac{p_2}{p_1}=1$
+
+4. Equal costs of misclassification: $C(1|2)=C(2|1)$
+
+The formula used to obtain the ECM is $ECM=C(2|1)P(2|1)p_1 + C(1|2)P(1|2)p_2$
+
+The goal is to identify the regions $R_1$ and $R_2$ that minimize the ECM. Therefore, the regions $R_1$ and $R_2$ that minimizes ECM are the following.
+
+$$R_1: \ \ all \ \  \underline{x} \ \ s.t. \ \ \frac{f_1(x)}{f_2(x)} \ge \frac{C(1|2)}{C(2|1)}\frac{p_2}{p_1}$$
+$$R_2: \  \ all \ \   \underline{x} \ \  s.t. \ \ \frac{f_1(x)}{f_2(x)} < \frac{C(1|2)}{C(2|1)}\frac{p_2}{p_1}$$
+Using this, the Minimum ECM Rule can be defined as follows. 
+
+- Allocate $\underline{X}$ to $\pi_1$ if $\underline{X}$ in $R_1$: all $\underline{X}$ s.t. $\frac{f_1(x)}{f_2(x)} \ge \frac{C(1|2)}{C(2|1)}\frac{p_2}{p_1}$
+
+- Allocate $\underline{X}$ to $\pi_2$ otherwise 
+
+Alternatively, the Minimum ECM Rule for two normal populations where $\Sigma_1= \Sigma_2=\Sigma$ can also be estimated using the following method. 
+
+- Allocate $\underline{X}$ to $\pi_1$ if $(\overline{X_1}- \overline{X_2})^TS_{pooled}^{-1}(\underline{X})-\frac{1}{2}(\overline{X_1}- \overline{X_2})\ge Ln[\frac{C(1|2)}{C(2|1)}\frac{p_2}{p_1}]$ 
+
+- Allocate $\underline{X}$ to $\pi_2$ otherwise 
+
+where 
+
+$X_{11}, \cdots, X_{1n_1}$ are random samples from $\pi_1$ (Female)
+
+$X_{21}, \cdots, X_{2n_2}$ are random samples from $\pi_2$ (Male)
+
+$$\overline{X_\ell}=\frac{1}{n_{\ell}} \sum^{n_{\ell}}_{j=1}X_{\ell j}, \  \ \ \ell=1,2$$
+
+$$S_{\ell} = \frac{1}{n_{\ell}-1} \sum^{n_{\ell}}_{j=1}(X_{\ell j}) - \overline{X}_{\ell})(X_{\ell j} - \overline{X}_{\ell})^T$$
+
+$$S_{pooled} = \frac{(n_1 -1)S_1+(n_2-1)S_2}{(n_1+n_2-2)}$$
+
+### IV. Confusion Matrix and Apparent Error Rate (APER)
+
+
+`Confusion Matrix`
+
+The confusion matrix can be described as follows. 
+
+
+  Confusion Matrix                                  $\pi_1$                         $\pi_2$              
+------------------------------------ -------------------------------- ---------------------------------- 
+  Actual population ($\pi_1$)                  $n_{1C}$                     $n_{1M}=n_1-n_{1C}$ 
+  Actual population ($\pi_2$)                  $n_{2M}=n_2-n_{2C}$          $n_{2C}$ 
+
+where 
+
+$n_{1C}$ is the number of $\pi_1$ items correctly classified 
+
+$n_{2C}$ is the number of $\pi_2$ items correctly classified 
+
+$n_{1M}$ is the number of $\pi_1$ items correctly misclassified
+
+$n_{2M}$ is the number of $\pi_2$ items correctly misclassified
+
+
+`Apparent Error Rate (APER)`
+
+The formula used to calculate the APER used for this project is defined below. 
+
+$$APER = \frac{n_{1M}+n_{2M}}{n_1 + n_2}$$
+
+
+
+### V.  Confusion Matrix (Holdout Procedure)
+
+
+Lauchen Bruch's "Holdout" procedure is another way to obtain  confusion matrix with better estimation. This approach involves ommitting one observation from $\pi_1$, developing a classifier based on the training observation ($n_1-1, n_2$), and classifying the holdout observation. These steps are then repeated for $\pi_2$. 
+
+
+
+
+***
+
+# **Results**
+
+## I. Summary Statistics
+
+
+```{r, echo=F,  message=FALSE, warning=FALSE}
+#load data
+data <- read.table("C:/Users/kayan/R-Projects/STA135/Concho_Water_Snakes/Project_4_Data.txt", header=T)
+data <- as.data.frame(data)
+```
+
+```{r, echo=F,message=FALSE, warning=FALSE}
+#display data
+library(DT)
+datatable(data, caption = htmltools::tags$caption(
+                  style = 'caption-side: bottom; text-align: center;',
+                  'Table 1: ', htmltools::em('Data'), rownames = FALSE,filter="top", options = list(pageLength = 5, autoWidth = TRUE, scrollX=F, columnDefs = list(list(width = '50px', targets = "_all")))))
+
+#change variable type
+data['X1'] <- lapply(data['X1'], as.factor)
+```
+
+The following chart displays the general summary statistics of the data being explored for this project. All two quantitative variables, $X2$ ( _tail length_ ) and $X3$ ( _snout to vent length_ ), contain integer values and $X1$ (gender) is a categorical variable with two factors. In this dataset, there are a total 37 observations for female and 29 observations for Male _Concho Water Snakes_. Therefore, the sample sizes are not equal across two genders. In the graph column of this chart, the bar graph for each variable shows the type of distributions each variable have. Both _X2_ and _X3_ are approximately normally distributed. The chart also shows that the data does not contain any missing values for all three features. The second column in the chart shows the computed mean, standard deviation, minimum, median, maximum, and interquartile range (IQR), and coefficient of variation (CV) for each quantitative variable. The number of distinct values in each quantitative variable are also included, showing that there are slightly more distinct values in X3 than X2. The upper and lower quartiles are also shown in Table 2 below. Since _X2_ and _X3_ are two different measures, it is not necessary to compare them. However, the summary statistics of these two variables can be compared across two genders. These two variables can also be used to classify Female and Male _Concho Water Snakes_. 
+
+```{r, echo= FALSE, fig.align = 'center', fig.cap = "Table 2: Summary statistics", message=FALSE, warning=FALSE}
+#view summary statistics
+library(summarytools)
+print(dfSummary(data, varnumbers   = FALSE, 
+                valid.col    = FALSE, 
+                graph.magnif = 0.7), method = "render")
+```
+
+
+```{r, echo= FALSE, message=FALSE, warning=FALSE}
+# get quartile
+library(knitr)
+library(kableExtra)
+g<- summary(data)
+kable_styling(kable(g[, 2:3], caption = "Table 2: X2 and X3 Summary"), position = "center")
+```
+
+The summary statistic for each gender category is displayed in Table 3 below. The mean column shows that the average values for each variable X2 and X3 between two genders slightly differ. Female Concho Water Snakes has higher average tail length (X2) compare to the male Concho Water Snakes. Male Concho Water Snakes has higher _snout to vent length_ (X3) mean compare to the Female _Concho Water Snakes_. This observation can be helpful in answering the question of whether Female and Male _Concho Water Snakes_ can be classified using these two measurements. Based on the standard deviation column included for each gender, it appears that _X2_ and _X3_ have the higher standard deviation in Male than Female so these variables are more dispersed relative to their mean in Male. Additionally, the standard deviation in _X2_ for Male and Female are approximately equivalent with a very small difference. 
+
+```{r, echo= FALSE, message=FALSE, warning=FALSE}
+##Summary statistics of variables grouped by gender
+library(vtable)
+st(data, group = 'X1',group.long = TRUE, group.test = TRUE, title = "Table 3: Summary statistics grouped by gender") 
+```
+
+The variance-covariance matrix for Female _Concho Water Snakes_ is displayed in Table 4 below.  The variance of _X2_ (tail length) in this population is 413.0030 while the variance of _X3_ (snout to vent length) is 872.6877  The covariance between _X2_ and _X3_ is 2417.9805, which is positive so this suggests that the two variables tend to increase or decrease in tandem.
+
+```{r, echo= FALSE, message=FALSE, warning=FALSE}
+#create subsets for each school
+df1 <- subset(data,X1=="Female")
+df2 <- subset(data,X1=="Male")
+
+#covariance in female 
+library(formattable)
+library(kableExtra)
+quantitative<-c('X2','X3')
+c <-cov(df1[,c(quantitative)], use = "pairwise.complete.obs")
+cov_df<-as.data.frame(c)
+cov_df %>%
+  kable(escape = F, caption = "Table 4: Covariance for Female") %>%
+  kable_styling(full_width = F)
+```
+
+The variance-covariance matrix for Male _Concho Water Snakes_ is displayed in Table 5 below.  The variance of _X2_ (tail length) in this population is 420.1675 while the variance of _X3_ (snout to vent length) is 5355.741. The covariance between _X2_ and _X3_ is 1401.844, which is positive so this suggests that the two variables also increase or decrease in tandem in this population, which is similar to the female population. The variance-covariance values for _X2_ and _X3_ in Male appears to be generally slightly higher than the values in the variance-covariance matrix for Female above. 
+
+```{r, echo= FALSE, message=FALSE, warning=FALSE}
+#create subsets for each school
+df1 <- subset(data,X1=="Female")
+df2 <- subset(data,X1=="Male")
+
+#covariance in male 
+library(formattable)
+library(kableExtra)
+quantitative<-c('X2','X3')
+c <-cov(df2[,c(quantitative)], use = "pairwise.complete.obs")
+cov_df<-as.data.frame(c)
+cov_df %>%
+  kable(escape = F, caption = "Table 5: Covariance for Male") %>%
+  kable_styling(full_width = F)
+```
+
+***
+
+## II. Data Visualizations
+
+Based on the pairwise plot below (Figure 1), the correlations between _X2_ and _X3_ for two genders are almost equivalent. There appears to be an overall significantly high and positive correlation between _X2_ and _X3_ across two populations (genders) and within each population. In this figure, the density plots also show that the two variables are approximately normally distributed in two populations and do not significantly deviate from the normality assumption. The exception is _X2_ in Female and _X3_ in Male, which appears to have a somewhat bimodal distribution.   
+
+```{r, echo= FALSE, message=FALSE, fig.cap="Figure 1: Pairwise scatter plot by gender",  warning=FALSE}
+##pairwise
+library(ggplot2)
+library(GGally)
+library(dplyr)
+library(plotly)
+gender = data$X1
+gender <-as.factor(gender)
+p <- ggpairs(data %>% select(X2, X3)
+            , aes(color = gender, alpha = 0.9), 
+            , upper = list(continuous = "points")
+            , lower = list(continuous = "cor")
+            )
+for(i in 1:p$nrow) {
+  for(j in 1:p$ncol){
+    p[i,j] <- p[i,j] + 
+        scale_fill_manual(values=c("darkorchid","springgreen2")) +
+        scale_color_manual(values=c("darkorchid","springgreen2"))  }
+}
+
+p
+```
+
+The side-by-side boxplots of _X2_ and _X3_ for two genders are also attached below (Figure 2). Based on this plot, there are two outliers that deviate from other points, 127 mm and 133 mm tail lengths in Female. The plot also further supports that previous finding that the mean of _X2_ are higher in Female than in Male. Meanwhile, Male has significantly higher mean in _X3_ than Female _Concho Water Snakes_. However, this finding can be further investigated using other quantitative methods to verify if _X2_ and _X3_ are indeed different across two genders.  
+
+```{r, echo = FALSE,  fig.cap="Figure 2: Side-by-side boxplots", message=FALSE, warning=FALSE}
+library(plotly)
+
+a1<-ggplot(data, aes(x = X1, y = X2)) +
+  geom_jitter(alpha = .5, aes(color = X1), size=2) +
+  geom_boxplot(alpha = .5, color = "dodgerblue4")+
+  scale_color_manual(values =c("darkorchid","springgreen2"))+
+  labs(y = "Tail Length (X2) ", x=" ")+
+  theme(legend.position="none")
+
+
+a2<-ggplot(data, aes(x = X1, y =  X3)) +
+  geom_jitter(alpha = .5, aes(color = X1), size=2) +
+  geom_boxplot(alpha = .5, color = "dodgerblue4")+
+  scale_color_manual(values = c("darkorchid","springgreen2"))+
+  labs(y = "Snout to Vent Length (X3) ", x=" ")+
+  theme(legend.position="none")
+
+subplot(a1, a2, shareX= T, titleY=T, nrows = 2) 
+
+``` 
+
+Based on the 95% confidence ellipse for Male and Female _Concho Water Snakes_ shown below, there are some points ($x_2$, $x_3$) in Female population that is included in the Male cluster. Therefore, we can infer that there might be some misclassification present. 
+
+
+```{r, echo=F,fig.cap="Figure 3: Gender confidence ellipse", message=FALSE, warning=FALSE}
+# Scatter plot by group
+library(ggplot2)
+dt<-data %>% mutate(cluster=as.factor(X1))
+p<-  dt %>%ggplot(aes(x = X2, y = X3, color = cluster)) +geom_point(alpha =0.6, size = 1.8) +
+  scale_color_manual(values = c("darkorchid","springgreen2"))+ guides(fill=guide_legend(title="spectral cluster"))+
+  labs(x = "Tail Length (mm)", y = "Snout to Vent Length (mm)",title = "Gender confidence ellipse")+
+  stat_ellipse(level=0.95, alpha=0.2, show.legend=F)+
+    theme(plot.title = element_text(hjust = 0.5))
+ggplotly(p)
+```
+
+***
+
+## III.  Minimum ECM Rule
+
+Assuming multivariate normal distributions with common variance covariance matrix, equal prior probabilities ($p_1=p_2=0.5$), and equal costs of misclassification, the Minimum Expected Cost of Misclassification (ECM) Rule for two genders of Concho Water Snakes using the outputs below is defined as follows. This result is also obtained using the methods specified in Part III of the Material and Methods section. 
+
+Allocate $(X_1, X_2)$ to $\pi_1$ if: $0.3564042X_2 - 0.1238378X_3 \ge  -5.07174$
+
+Allocate $(X_1, X_2)$ to $\pi_2$ if: $0.3564042X_2- 0.1238378X_3 < -5.07174$
+
+```{r, echo= FALSE,fig.cap="Figure 4: Gender confidence ellipse", message=FALSE, warning=FALSE}
+#number of observations per gender
+n <- by(data[,2:3], data$X1, nrow)
+n2 <- n[1][[1]]
+n3 <- n[2][[1]]
+
+#variable means for each gender 
+means <- by(data[,2:3], data$X1, colMeans)
+m2 <- means[1][[1]]
+m3 <- means[2][[1]]
+
+#sample var-cov matrix  
+s <- by(data[,2:3], data$X1, var)
+s2 <- s[1][[1]]
+s3 <- s[2][[1]] 
+
+#Spooled
+sp <- ((n2-1)*s2 + (n3-1)*s3)/(n2+n3-2)
+
+
+(a <- solve(sp)%*%(m2-m3))
+
+(m <- (t(a)%*%m2+t(a)%*%m3)/2)
+
+library(ggplot2)
+dt<-data %>% mutate(cluster=as.factor(X1))
+p<-  dt %>%ggplot(aes(x = X2, y = X3, color = cluster)) +geom_point(alpha =0.6, size = 1.8) +
+  scale_color_manual(values = c("darkorchid","springgreen2"))+ guides(fill=guide_legend(title="spectral cluster"))+
+  labs(x = "Tail Length (mm)", y = "Snout to Vent Length (mm)",title = "Gender confidence ellipse")+
+  stat_ellipse(level=0.95, alpha=0.2, show.legend=F)+geom_abline(intercept = m/a[2], slope = -a[1]/a[2])+
+    theme(plot.title = element_text(hjust = 0.5))
+ggplotly(p)
+  
+```
+
+
+
+
+***
+
+## IV. Confusion Matrix & APER
+
+`Confusion Matrix`
+
+The confusion matrix of the data is 
+
+  Confusion Matrix                     Classified as normal         Classified as obligatory              
+------------------------------------ ------------------------ ---------------------------------- 
+    Actual population (normal)               34                               3
+    Actual population (obligatory)            2                               27
+
+where 
+
+$34$ is the number of $\pi_1$ items correctly classified 
+
+$27$ is the number of $\pi_2$ items correctly classified 
+
+$3$ is the number of $\pi_1$ items correctly misclassified
+
+$2$ is the number of $\pi_2$ items correctly misclassified
+
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+predictions <- t(a)%*%t(data[, 2:3]) < m[1]
+p <- factor(predictions, labels=c("Female", "Male"))
+(confusion_matrix <- table(data$X1, p))
+library(caret)
+confusionMatrix(p, data$X1)
+``` 
+
+
+`Apparent Error Rate (APER)`
+
+The Apparent Error Rate (APER), which is calculated using the formula provided in the Methods section is displayed below. 
+
+$$APER = \frac{3+2}{66} = 0.07575758$$
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+((confusion_matrix[1,2] + confusion_matrix[2,1])/nrow(data))
+``` 
+
+***
+
+## V.  Confusion Matrix (Holdout Procedure)
+
+The confusion matrix obtained using the holdout procedure appears to be equivalent to the confusion matrix obtained above in the previous section. Figure 5 below, which shows the partition plot, also shows that there are three misclassified observations from the Female population and two misclassified observations from the Male population, which verifies the misclassifications shown in Figure 4 above. The estimated expected actual error rate (AER) is also 0.07575758. 
+
+```{r, echo = FALSE,  message=FALSE, warning=FALSE}
+library(MASS)
+library(tidyverse)
+library(caret)
+lda_fit_holdout <- lda(X1~X2+X3, data = data, CV=TRUE, prior = c(0.5,0.5))
+(confusion_matrix_holdout <- table(data$X1, lda_fit_holdout$class))
+confusionMatrix(lda_fit_holdout$class, data$X1)
+aer<-(confusion_matrix_holdout[1,2] + confusion_matrix_holdout[2,1])/(nrow(data))
+
+cat("Actual Error Rate (AER):" , aer)
+``` 
+
+```{r, echo = FALSE, fig.cap="Figure 5: Partition Plot" ,message=FALSE, warning=FALSE}
+library(klaR)
+partimat(X1~X2+X3, data = data, method = "lda")
+``` 
+
+
+***
+
+
+# **Appendix**
+
+```{r, message=FALSE, warning=FALSE}
+#load data
+data <- read.table("C:/Users/kayan/R-Projects/STA135/Concho_Water_Snakes/Project_4_Data.txt", header=T)
+data <- as.data.frame(data)
+```
+
+```{r, message=FALSE, warning=FALSE}
+#display data
+library(DT)
+datatable(data, caption = htmltools::tags$caption(
+                  style = 'caption-side: bottom; text-align: center;',
+                  'Table 1: ', htmltools::em('Data'), rownames = FALSE,filter="top", options = list(pageLength = 5, autoWidth = TRUE, scrollX=F, columnDefs = list(list(width = '50px', targets = "_all")))))
+
+#change variable type
+data['X1'] <- lapply(data['X1'], as.factor)
+```
+
+`I. Summary Statistics`
+
+
+
+```{r, fig.align = 'center', fig.cap = "Table 2: Summary statistics", message=FALSE, warning=FALSE}
+#view summary statistics
+library(summarytools)
+print(dfSummary(data, varnumbers   = FALSE, 
+                valid.col    = FALSE, 
+                graph.magnif = 0.7), method = "render")
+```
+
+```{r,  message=FALSE, warning=FALSE}
+# get quartile
+library(knitr)
+library(kableExtra)
+g<- summary(data)
+kable_styling(kable(g[, 2:3], caption = "Table 2: X2 and X3 Summary"), position = "center")
+```
+
+
+```{r,  message=FALSE, warning=FALSE}
+##Summary statistics of variables grouped by gender
+library(vtable)
+st(data, group = 'X1',group.long = TRUE, group.test = TRUE, title = "Table 3: Summary statistics grouped by gender") 
+```
+
+```{r, message=FALSE, warning=FALSE}
+#create subsets for each school
+df1 <- subset(data,X1=="Female")
+df2 <- subset(data,X1=="Male")
+
+#covariance in female 
+library(formattable)
+library(kableExtra)
+quantitative<-c('X2','X3')
+c <-cov(df1[,c(quantitative)], use = "pairwise.complete.obs")
+cov_df<-as.data.frame(c)
+cov_df %>%
+  kable(escape = F, caption = "Table 4: Covariance for Female") %>%
+  kable_styling(full_width = F)
+```
+
+```{r,  message=FALSE, warning=FALSE}
+#create subsets for each school
+df1 <- subset(data,X1=="Female")
+df2 <- subset(data,X1=="Male")
+
+#covariance in male 
+library(formattable)
+library(kableExtra)
+quantitative<-c('X2','X3')
+c <-cov(df2[,c(quantitative)], use = "pairwise.complete.obs")
+cov_df<-as.data.frame(c)
+cov_df %>%
+  kable(escape = F, caption = "Table 5: Covariance for Male") %>%
+  kable_styling(full_width = F)
+```
+
+`II. Data Visualizations`
+
+```{r, message=FALSE, fig.cap="Figure 1: Pairwise scatter plot by gender",  warning=FALSE}
+##pairwise
+library(ggplot2)
+library(GGally)
+library(dplyr)
+library(plotly)
+gender = data$X1
+gender <-as.factor(gender)
+p <- ggpairs(data [,2:3]
+            , aes(color = gender, alpha = 0.9), 
+            , upper = list(continuous = "points")
+            , lower = list(continuous = "cor")
+            )
+for(i in 1:p$nrow) {
+  for(j in 1:p$ncol){
+    p[i,j] <- p[i,j] + 
+        scale_fill_manual(values=c("darkorchid","springgreen2")) +
+        scale_color_manual(values=c("darkorchid","springgreen2"))  }
+}
+
+p
+```
+
+```{r,  fig.cap="Figure 2: Side-by-side boxplots", message=FALSE, warning=FALSE}
+library(plotly)
+
+a1<-ggplot(data, aes(x = X1, y = X2)) +
+  geom_jitter(alpha = .5, aes(color = X1), size=2) +
+  geom_boxplot(alpha = .5, color = "dodgerblue4")+
+  scale_color_manual(values =c("darkorchid","springgreen2"))+
+  labs(y = "Tail Length (X2) ", x=" ")+
+  theme(legend.position="none")
+
+
+a2<-ggplot(data, aes(x = X1, y =  X3)) +
+  geom_jitter(alpha = .5, aes(color = X1), size=2) +
+  geom_boxplot(alpha = .5, color = "dodgerblue4")+
+  scale_color_manual(values = c("darkorchid","springgreen2"))+
+  labs(y = "Snout to Vent Length (X3) ", x=" ")+
+  theme(legend.position="none")
+
+subplot(a1, a2, shareX= T, titleY=T, nrows = 2) 
+
+``` 
+
+```{r, fig.cap="Figure 3: Gender confidence ellipse", message=FALSE, warning=FALSE}
+# Scatter plot by group
+library(ggplot2)
+dt<-data %>% mutate(cluster=as.factor(X1))
+p<-  dt %>%ggplot(aes(x = X2, y = X3, color = cluster)) +geom_point(alpha =0.6, size = 1.8) +
+  scale_color_manual(values = c("darkorchid","springgreen2"))+ guides(fill=guide_legend(title="spectral cluster"))+
+  labs(x = "Tail Length (mm)", y = "Snout to Vent Length (mm)",title = "Gender confidence ellipse")+
+  stat_ellipse(level=0.95, alpha=0.2, show.legend=F)+
+    theme(plot.title = element_text(hjust = 0.5))
+ggplotly(p)
+```
+
+`III.  Minimum ECM Rule`
+
+```{r, fig.cap="Figure 4: Gender confidence ellipse", message=FALSE, warning=FALSE}
+#number of observations per gender
+n <- by(data[,2:3], data$X1, nrow)
+n2 <- n[1][[1]]
+n3 <- n[2][[1]]
+
+#variable means for each gender 
+means <- by(data[,2:3], data$X1, colMeans)
+m2 <- means[1][[1]]
+m3 <- means[2][[1]]
+
+#sample var-cov matrix  
+s <- by(data[,2:3], data$X1, var)
+s2 <- s[1][[1]]
+s3 <- s[2][[1]] 
+
+#Spooled
+sp <- ((n2-1)*s2 + (n3-1)*s3)/(n2+n3-2)
+
+
+(a <- solve(sp)%*%(m2-m3))
+
+(m <- (t(a)%*%m2+t(a)%*%m3)/2)
+
+library(ggplot2)
+dt<-data %>% mutate(cluster=as.factor(X1))
+p<-  dt %>%ggplot(aes(x = X2, y = X3, color = cluster)) +geom_point(alpha =0.6, size = 1.8) +
+  scale_color_manual(values = c("darkorchid","springgreen2"))+ guides(fill=guide_legend(title="spectral cluster"))+
+  labs(x = "Tail Length (mm)", y = "Snout to Vent Length (mm)",title = "Gender confidence ellipse")+
+  stat_ellipse(level=0.95, alpha=0.2, show.legend=F)+geom_abline(intercept = m/a[2], slope = -a[1]/a[2])+
+    theme(plot.title = element_text(hjust = 0.5))
+ggplotly(p)
+  
+```
+
+`IV. Confusion Matrix and Apparent Error Rate (APER)`
+
+```{r, message=FALSE, warning=FALSE}
+predictions <- t(a)%*%t(data[, 2:3]) < m[1]
+p <- factor(predictions, labels=c("Female", "Male"))
+(confusion_matrix <- table(data$X1, p))
+library(caret)
+confusionMatrix(p, data$X1)
+``` 
+
+
+```{r, message=FALSE, warning=FALSE}
+((confusion_matrix[1,2] + confusion_matrix[2,1])/nrow(data))
+``` 
+
+`V.  Confusion Matrix (Holdout Procedure)`
+
+
+```{r,  message=FALSE, warning=FALSE}
+library(MASS)
+library(tidyverse)
+library(caret)
+lda_fit_holdout <- lda(X1~X2+X3, data = data, CV=TRUE, prior = c(0.5,0.5))
+(confusion_matrix_holdout <- table(data$X1, lda_fit_holdout$class))
+confusionMatrix(lda_fit_holdout$class, data$X1)
+aer<-(confusion_matrix_holdout[1,2] + confusion_matrix_holdout[2,1])/(nrow(data))
+
+cat("Actual Error Rate (AER):" , aer)
+``` 
+
+```{r,  fig.cap="Figure 4: Partition Plot" ,message=FALSE, warning=FALSE}
+library(klaR)
+partimat(X1~X2+X3, data = data, method = "lda")
+``` 
+
+
+
+
+***
+
+## Session information {-}
+
+```{r}
+sessionInfo()
+```
+
